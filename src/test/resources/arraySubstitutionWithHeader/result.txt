@@ -1,0 +1,3 @@
+helloInLanguage,worldInLanguages
+ciao,mondo
+szia,világ

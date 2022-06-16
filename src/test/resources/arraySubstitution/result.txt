@@ -1,0 +1,2 @@
+ciao,mondo
+szia,világ
