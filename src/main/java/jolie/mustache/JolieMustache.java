@@ -19,29 +19,42 @@ public class JolieMustache  extends JavaService {
         DefaultMustacheFactory defaultMustacheFactory = new DefaultMustacheFactory();
         Mustache mustache = defaultMustacheFactory.compile(new StringReader(request.getFirstChild("template").strValue()), "Jolie");
         StringBuilder sb = new StringBuilder();
-        parseMustache(mustache , request.getFirstChild("data") ,sb );
+        parseMustache(mustache , request.getFirstChild("data") ,sb  , false);
         return sb.toString();
     }
 
-    private void parseMustache(Mustache mustache, Value value , StringBuilder sb) {
+    private void parseMustache(Mustache mustache, Value value , StringBuilder sb , boolean isLast) {
         Iterator<Code> iterator = Arrays.stream(mustache.getCodes()).iterator();
         while (iterator.hasNext()) {
             DefaultCode code = (DefaultCode) iterator.next();
             JolieCode jolieCode = JolieCode.fromIterableCode(code);
             if (jolieCode.getType()!= null && "#".equals(jolieCode.getType())) {
 
-                value.getChildren(jolieCode.getName()).forEach(node -> {
-                    parseMustache(jolieCode.getMustache(), node, sb);
-                });
-            }else if (jolieCode.getType()!= null && "^".equals(jolieCode.getType())){
-                if (!value.getFirstChild(jolieCode.getName()).boolValue() ||  !value.hasChildren(jolieCode.getName())){
-                    parseMustache(jolieCode.getMustache(), value.getFirstChild(jolieCode.getName()), sb);
+                for (int counter = 0 ; counter < value.getChildren(jolieCode.getName()).size() ; counter++){
+
+                    parseMustache(jolieCode.getMustache(), value.getChildren(jolieCode.getName()).get(counter), sb , counter ==value.getChildren(jolieCode.getName()).size()-1 );
+
                 }
+                sb.append(jolieCode.getAppend()!= null? jolieCode.getAppend() : "" ) ;
+
+
+            }else if (jolieCode.getType()!= null && "^".equals(jolieCode.getType())){
+                if (!"-last".equals(jolieCode.getName()) && (!value.getFirstChild(jolieCode.getName()).boolValue() ||  !value.hasChildren(jolieCode.getName()))){
+                    parseMustache(jolieCode.getMustache(), value.getFirstChild(jolieCode.getName()), sb ,isLast);
+                }else if  ("-last".equals(jolieCode.getName()) && !isLast){
+                    parseMustache(jolieCode.getMustache(), value.getFirstChild(jolieCode.getName()), sb ,isLast);
+                    sb.append(jolieCode.getAppend()!= null? jolieCode.getAppend() : "" ) ;
+                }else if  ("-last".equals(jolieCode.getName()) && isLast) {
+                    sb.append(jolieCode.getAppend()!= null? jolieCode.getAppend() : "" ) ;
+                }
+
             }else if (jolieCode.getName() != null ){
                 sb.append(value.getFirstChild(jolieCode.getName()).strValue() ).append(jolieCode.getAppend()!= null? jolieCode.getAppend() : "" ) ;
+
             }else if (jolieCode.getAppend()!= null){
                 sb.append(jolieCode.getAppend());
             }
+
         }
 
     }

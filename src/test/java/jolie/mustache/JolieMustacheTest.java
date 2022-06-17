@@ -85,4 +85,29 @@ public class JolieMustacheTest {
 
     }
 
+
+    @Test
+    public void lastSubstitution() throws IOException {
+        String template = new String(getClass().getClassLoader().getResourceAsStream("lastSubstitution/template.mustache").readAllBytes());
+        Value request = Value.create();
+        request.getFirstChild("template").setValue(template);
+
+        Value value = Value.create();
+
+        value.getFirstChild("nodeName").setValue("nodeName");
+        value.getFirstChild("value").setValue("nodeValue");
+        request.getFirstChild("data").getChildren("values").add(value);
+        Value value1 = Value.create();
+
+        value1.getFirstChild("nodeName").setValue("nodeName1");
+        value1.getFirstChild("value").setValue("nodeValue1");
+        request.getFirstChild("data").getChildren("values").add(value1);
+        String result = jolieMustache.mustacheCompile(request);
+        System.out.println(result);
+
+        String expectedResult = new String(getClass().getClassLoader().getResourceAsStream("lastSubstitution//result.txt").readAllBytes());
+        Assert.assertEquals(expectedResult , result );
+
+    }
+
 }
